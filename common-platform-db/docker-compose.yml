@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16.15-alpine
+    environment:
+      POSTGRES_DB: common_platform
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: ${COMMON_PLATFORM_PASSWORD:?COMMON_PLATFORM_PASSWORD must be set}
+      TZ: Asia/Tokyo
+    ports:
+      - "${COMMON_PLATFORM_PORT:-55432}:5432"
+    volumes:
+      - common_platform_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform -d common_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  common_platform_data:

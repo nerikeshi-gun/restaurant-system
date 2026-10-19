@@ -1,0 +1,8 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>テーブル管理｜{{ restaurant_name }}</title><link rel="stylesheet" href="/static/app.css?v=20260827-7"></head>
+<body class="admin-page table-admin-page"><header><strong>{{ restaurant_name }} テーブル管理</strong><a href="/" class="header-link">トップへ戻る</a></header>
+<main class="page table-admin-main">
+  <div class="table-admin-heading"><div><h1>テーブル管理</h1><p>お客様の退店後、ここからテーブルを空の状態へ切り替えます。</p></div><nav><a class="link-button" href="/staff">店員画面</a><a class="link-button" href="/kitchen">厨房画面</a><a class="link-button" href="/admin/menu">メニュー・店舗設定</a></nav></div>
+  <div class="table-reset-guide"><strong>退店処理の手順</strong><span>① 会計完了を確認　② 未提供が0点か確認　③「退店処理して次のお客様へ」を押す</span></div>
+  <div id="table-reset-message" class="form-message hidden"></div>
+  <div id="table-reset-list" class="table-reset-grid"><p class="hint">テーブル状況を確認中…</p></div>
+</main><script src="/static/table-admin.js?v=20260828-1"></script></body></html>

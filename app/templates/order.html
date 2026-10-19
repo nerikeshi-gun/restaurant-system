@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="{{ language|default('ja') }}"{% if language == 'ur' %} dir="rtl"{% endif %}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{{ table.number }}番テーブル｜{{ restaurant_name }}</title><link rel="stylesheet" href="/static/app.css?v=20260828-5"></head>
+<body class="order-page{% if actor == 'customer' %} customer-order-page order-mode-{{ order_mode|default('choice') }}{% endif %}" data-session-id="{{ session.id }}" data-table-id="{{ table.id }}" data-actor="{{ actor }}" data-store-id="{{ store_id }}" data-language="{{ language|default('ja') }}" data-order-mode="{{ order_mode|default('choice') }}" data-start-url="{{ order_path }}" data-voice-url="{{ voice_path }}" data-menu-url="{{ menu_path }}" data-language-url="{{ language_path }}" style="--accent:{{ theme_color }}">
+<header><strong>{{ restaurant_name }}</strong><span><span id="table-label">{{ table.number }}番テーブル・お客様用</span>{% if actor == 'customer' %} <a class="language-change-link" href="{{ language_path }}">🌐 <span id="change-language-label">言語</span></a>{% endif %}</span></header>
+<main class="page order-layout">
+  {% if actor == 'customer' %}<section class="customer-start-panel" aria-labelledby="customer-start-title"><h1 id="customer-start-title">注文方法を選択してください</h1><div><a id="start-voice" href="{{ voice_path }}" class="customer-start-button voice-button"><span>🎤</span><strong>何が食べたいですか？</strong><span id="start-voice-prompt">話してください</span><small id="voice-example">例：「ビール」「スタミナ系」</small></a><a id="start-menu" href="{{ menu_path }}" class="customer-start-button menu-start-button"><span>☰</span><strong>メニューから注文</strong><small>画面を見て商品を選びます</small></a></div></section>{% endif %}
+  <section class="order-entry" id="order-entry">
+    <div class="layout-box" data-layout-block="input">
+    <input id="input-language" type="hidden" value="{{ language|default('ja') }}">
+    <label for="order-text" id="source-label">注文内容</label>
+    <textarea id="order-text" rows="2" placeholder="メニュー名、食べたいものなど"></textarea>
+    <div id="japanese-confirm" class="hidden"><textarea id="japanese-text" rows="2"></textarea></div>
+    <div class="voice-actions{% if actor == 'customer' %} three-actions{% endif %}"><button id="voice" class="voice-button" type="button">🎤 話す</button><button id="interpret" class="primary" type="button">注文候補を確認</button>{% if actor == 'customer' %}<button id="clear-order-text" type="button">消去</button>{% endif %}</div>
+    </div>
+    <div class="layout-box" data-layout-block="menu">
+    <button id="toggle-menu" class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-panel">メニューから選ぶ</button>
+    <section id="menu-panel" class="hidden"><div id="menu" class="menu-grid"></div></section>
+    </div>
+    <div class="layout-box" data-layout-block="service">
+    <div class="quick service-actions"><button id="toggle-inquiry" class="service-inquiry" type="button" aria-expanded="false" aria-controls="inquiry-panel">🎤 問い合わせ</button></div>
+    <section id="inquiry-panel" class="inquiry-panel hidden">
+      <label for="inquiry-text">問い合わせ内容</label>
+      <textarea id="inquiry-text" rows="2" placeholder="ご用件を話すか入力してください"></textarea>
+      <div class="inquiry-actions"><button id="inquiry-voice" class="voice-button" type="button">🎤 音声入力</button><button id="send-inquiry" class="service-inquiry" type="button">送信</button><button id="clear-inquiry" type="button">取り消し</button></div>
+      <p id="inquiry-voice-help" class="hint">「音声入力」を押すと録音を開始します。送信など別のボタンを押すと終了します。</p>
+    </section>
+    </div>
+    <section id="interpret-result" class="hidden review-panel"></section>
+  </section>
+  <aside class="shared-order-panel">
+    <div class="shared-heading"><div><h1>ご注文内容</h1><p id="sync-state" class="hint">同期中…</p></div><span id="order-number" class="order-number"></span></div>
+    <div class="shared-order-actions">
+      <div class="shared-total pending-total"><span>今回の注文金額</span><strong id="pending-total">0円</strong></div>
+      <div class="shared-total"><span>現在の合計金額</span><strong id="shared-total">0円</strong></div>
+      <button id="confirm-order" class="primary confirm-button" disabled>注文</button>
+      <p class="confirm-note">確認画面を開いてから注文を確定します。</p>
+    </div>
+    <div id="shared-items"></div>
+  </aside>
+</main>
+<nav class="customer-fixed-nav" aria-label="画面操作"><button id="switch-order-mode" class="voice-button" type="button">注文方法を切り替える</button><button id="start-over" class="primary" type="button">最初から</button><button data-request="checkout" class="service-checkout" type="button">お会計</button></nav>
+<div id="kitchen-reply-popup" class="reply-popup hidden" role="dialog" aria-modal="true" aria-labelledby="kitchen-reply-title">
+  <div class="reply-popup-card"><p class="reply-popup-label">厨房からのお知らせ</p><h2 id="kitchen-reply-title">返答が届きました</h2><p id="kitchen-reply-text" class="reply-popup-text"></p><button id="close-kitchen-reply" class="primary submit" type="button">閉じる</button></div>
+</div>
+<div id="customer-confirm-dialog" class="confirm-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="customer-confirm-title">
+  <button id="customer-confirm-backdrop" class="confirm-backdrop" aria-label="確認を閉じる"></button>
+  <section class="confirm-dialog-card">
+    <h1 id="customer-confirm-title">注文を確定しますか？</h1>
+    <p>確定すると厨房へ送信されます。</p>
+    <div id="customer-confirm-items" class="customer-confirm-items"></div>
+    <div class="confirm-dialog-summary"><span id="customer-confirm-count">0点</span><strong id="customer-confirm-total">0円</strong></div>
+    <div class="confirm-dialog-actions"><button id="cancel-customer-confirm" type="button">戻る</button><button id="submit-customer-confirm" class="primary" type="button">確定</button></div>
+  </section>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script>window.STORE_UI_LAYOUT={{ ui_layout|tojson }};</script><script src="/static/order.js?v=20260901-1"></script></body></html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{{ table.number }}番テーブル｜店員注文</title><link rel="stylesheet" href="/static/app.css?v=20260822-7"></head>
+<body class="staff-handheld" data-session-id="{{ session.id }}" data-table-id="{{ table.id }}" style="--accent:{{ theme_color }}">
+<header class="handheld-header"><a href="/staff" class="handheld-back" aria-label="テーブル選択へ戻る">‹</a><div><strong>{{ table.number }}番テーブル</strong><span>店員注文</span></div><span id="sync-state">同期中…</span></header>
+<main class="handheld-main">
+  <section id="menu-view" class="handheld-view">
+    <nav id="category-nav" class="category-nav" aria-label="メニューカテゴリ"></nav>
+    <div id="staff-menu" class="handheld-menu"></div>
+  </section>
+  <section id="cart-view" class="handheld-view hidden">
+    <div class="handheld-section-title"><div><h1>注文内容</h1><span id="order-number" class="order-number">未確定</span></div><p>内容を確認して厨房へ送信してください。</p></div>
+    <div id="staff-order-items"></div>
+    <div class="handheld-totals"><div><span>今回の注文</span><strong id="pending-total">0円</strong></div><div><span>現在の合計</span><strong id="current-total">0円</strong></div></div>
+    <button id="confirm-order" class="primary handheld-confirm" disabled>注文</button>
+  </section>
+</main>
+<nav class="handheld-bottom-nav" aria-label="注文画面">
+  <button id="show-menu" class="selected" type="button"><span>商品</span><small>メニューから選ぶ</small></button>
+  <button id="show-cart" type="button"><span>注文内容 <b id="draft-count" class="cart-badge hidden">0</b></span><small id="nav-total">0円</small></button>
+</nav>
+<div id="item-sheet" class="item-sheet hidden" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <button id="sheet-backdrop" class="sheet-backdrop" aria-label="閉じる"></button>
+  <section class="sheet-card"><div class="sheet-handle"></div><button id="close-sheet" class="sheet-close" aria-label="閉じる">×</button><div id="sheet-content"></div></section>
+</div>
+<div id="confirm-dialog" class="confirm-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+  <button id="confirm-backdrop" class="confirm-backdrop" aria-label="確認を閉じる"></button>
+  <section class="confirm-dialog-card">
+    <h1 id="confirm-dialog-title">注文を確定しますか？</h1>
+    <p>確定すると厨房へ送信されます。</p>
+    <div class="confirm-dialog-summary"><span id="confirm-item-count">0点</span><strong id="confirm-total">0円</strong></div>
+    <div class="confirm-dialog-actions"><button id="cancel-confirm" type="button">戻る</button><button id="submit-confirm" class="primary" type="button">確定</button></div>
+  </section>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="/static/staff-order.js?v=20260827-5"></script></body></html>

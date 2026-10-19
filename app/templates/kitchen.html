@@ -1,0 +1,8 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>厨房｜{{ restaurant_name }}</title><link rel="stylesheet" href="/static/app.css?v=20260828-3"></head>
+<body class="kitchen"><header><strong><span id="restaurant-name">{{ restaurant_name }}</span> <span id="kitchen-title">厨房</span></strong>
+<div class="kitchen-header-actions"><label for="kitchen-language" id="language-label">言語</label><select id="kitchen-language" aria-label="言語">
+<option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="vi">Tiếng Việt</option><option value="ur">اردو</option>
+</select><a class="kitchen-admin-link" href="/admin">管理</a><span id="connection">接続中</span></div></header>
+<main class="page"><section><h1 id="orders-title">注文</h1><div id="orders" class="kitchen-grid"></div></section><section><h1 id="requests-title">ご依頼</h1><div id="requests" class="kitchen-grid"></div></section></main>
+<script src="/static/kitchen.js?v=20260828-7"></script></body></html>
