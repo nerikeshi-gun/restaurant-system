@@ -28,6 +28,9 @@ PostgreSQL 15以降を対象に、業種別・企業別ラッパーを重ねて�
 |`ER-STRUCTURE.md`|ER構造と定義解決、履歴、テナント境界の説明|
 |`WINDOWS-SETUP.md`|Windowsでの構築手順|
 |`OPERATIONS.md`|停止、再起動、バックアップ、復元手順|
+|`005_core_record.sql`|core_record 統合設計の基盤（確定ジャーナル、未確定候補、ハッシュチェーン、監査ログ）|
+|`006_restaurant_seed.sql`|飲食業の定義（場所・商品・来店セッション・注文などの活動）|
+|`007_core_record_verify.sql`|core_record の自動検証（29項目）|
 |`design-review.md`|原本の問題、修正内容、未決事項|
 |`test-results.md`|実際に実行した環境・コマンド・検証結果|
 

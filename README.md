@@ -34,7 +34,7 @@ Windows PCを店内サーバーにし、同じLANまたはテザリング内の�
 
 AIや音声認識の結果は`tr_record`相当の確定データへ自動登録しません。商品、販売状態、数量、オプション、価格はサーバー側の通常プログラムが再検証し、人が「注文を確定して厨房へ」を押した明細だけを確定します。
 
-設計原則は[業務基盤の設計思想とテーブル構成](docs/core-data-architecture.md)を参照してください。
+設計原則は[業務基盤の設計思想とテーブル構成](docs/core-data-architecture.md)を参照してください。共通基盤DBとの統合案は[core_record統合設計（案）](docs/core-record-integrated-design.md)です。
 今回追加したAI候補解析の詳細は[AI注文候補解析仕様](docs/ai-order-resolution.md)を参照してください。
 
 ## Windowsでのセットアップ

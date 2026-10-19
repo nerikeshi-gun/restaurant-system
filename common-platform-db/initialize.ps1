@@ -55,6 +55,9 @@ if ($Mode -eq "Auto") {
 
 $sqlFiles = @("001_schema.sql", "002_seed.sql")
 if ($IncludeTestData) { $sqlFiles += @("003_test_data.sql", "004_verify.sql") }
+# 004 はテーブル数を厳密に検査するため、core_record 系は 004 の後に適用する。
+$sqlFiles += @("005_core_record.sql", "006_restaurant_seed.sql")
+if ($IncludeTestData) { $sqlFiles += @("007_core_record_verify.sql") }
 foreach ($file in $sqlFiles) {
     if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot $file))) {
         throw "SQL file was not found: $file"
