@@ -187,6 +187,13 @@ def test_scenario_accidental_draft_cancel_then_reselect_and_confirm(customer_cli
     assert [item["status"] for item in confirmed.json()["items"]] == ["cancelled", "confirmed"]
 
 
+def customer_cancel(client, order, item_id, version):
+    return client.post(
+        f"/api/v1/shared-orders/{order['id']}/items/{item_id}/cancel",
+        json={"expected_version": version, "input_by": "customer"},
+    )
+
+
 def test_scenario_confirmed_cancel_before_cooking_then_order_again(customer_client):
     client, _ = customer_client
     order = current_order(client)
@@ -194,32 +201,56 @@ def test_scenario_confirmed_cancel_before_cooking_then_order_again(customer_clie
     added = add_item(client, order, menu_item_id).json()
     confirmed = confirm(client, added).json()
     item_id = confirmed["items"][0]["id"]
-    cancelled = client.post(
-        f"/api/v1/shared-orders/{order['id']}/items/{item_id}/cancel",
-        json={"expected_version": confirmed["version"], "input_by": "customer"},
-    )
-    assert cancelled.status_code == 200
-    assert cancelled.json()["current_total"] == 0
 
-    reordered = add_item(client, cancelled.json(), menu_item_id).json()
+    # 確定後の取消は依頼になり、厨房が承認するまでは金額も残る
+    requested = customer_cancel(client, order, item_id, confirmed["version"])
+    assert requested.status_code == 200
+    assert requested.json()["items"][0]["status"] == "cancel_requested"
+    assert requested.json()["current_total"] > 0
+
+    approved = client.post(f"/api/v1/kitchen/items/{item_id}/cancel-request/approve")
+    assert approved.status_code == 200
+    assert approved.json()["items"][0]["status"] == "cancelled"
+    assert approved.json()["current_total"] == 0
+
+    reordered = add_item(client, approved.json(), menu_item_id).json()
     assert confirm(client, reordered).status_code == 200
 
 
-def test_scenario_cancel_after_cooking_rejected_and_order_state_survives(customer_client):
+def test_scenario_cancel_request_during_cooking_rejected_by_kitchen_and_state_survives(customer_client):
     client, _ = customer_client
     order = current_order(client)
     added = add_item(client, order, available_menu(client)[0]["id"]).json()
     confirmed = confirm(client, added).json()
     item_id = confirmed["items"][0]["id"]
     cooking = client.patch(f"/api/v1/kitchen/items/{item_id}/status", json={"status": "preparing"}).json()
-    rejected = client.post(
-        f"/api/v1/shared-orders/{order['id']}/items/{item_id}/cancel",
-        json={"expected_version": cooking["version"], "input_by": "customer"},
-    )
-    assert rejected.status_code == 422
+
+    # 調理中でも依頼は出せるが、厨房が断れば確定・調理中の状態へ戻る
+    requested = customer_cancel(client, order, item_id, cooking["version"])
+    assert requested.status_code == 200
+    assert requested.json()["items"][0]["status"] == "cancel_requested"
+    rejected = client.post(f"/api/v1/kitchen/items/{item_id}/cancel-request/reject")
+    assert rejected.status_code == 200
+
     restored = current_order(client)
     assert restored["items"][0]["status"] == "confirmed"
     assert restored["items"][0]["kitchen_status"] == "preparing"
+
+
+def test_scenario_cancel_after_served_rejected_and_order_state_survives(customer_client):
+    client, _ = customer_client
+    order = current_order(client)
+    added = add_item(client, order, available_menu(client)[0]["id"]).json()
+    confirmed = confirm(client, added).json()
+    item_id = confirmed["items"][0]["id"]
+    client.patch(f"/api/v1/kitchen/items/{item_id}/status", json={"status": "preparing"})
+    served = client.patch(f"/api/v1/kitchen/items/{item_id}/status", json={"status": "served"}).json()
+
+    rejected = customer_cancel(client, order, item_id, served["version"])
+    assert rejected.status_code == 422
+    restored = current_order(client)
+    assert restored["items"][0]["status"] == "confirmed"
+    assert restored["items"][0]["kitchen_status"] == "served"
 
 
 def test_scenario_wrong_table_item_rejected_then_own_item_still_operable(customer_client):

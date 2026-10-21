@@ -1,4 +1,5 @@
 import io
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -71,11 +72,11 @@ def test_staff_table_uses_dedicated_handheld_page(shared_client):
     assert 'id="start-voice"' in tablet_page.text
     assert 'id="start-menu"' in tablet_page.text
     assert "注文方法を選択してください" in tablet_page.text
-    assert "食べたいもの・飲みたいものと数量を話してください" in tablet_page.text
+    assert "食べたいもの・飲みたいものと数量を話してください" in client.get("/static/order.js").text
     assert "customer-order-page" in tablet_page.text
     assert 'data-language="en"' in tablet_page.text
     assert 'data-order-mode="choice"' in tablet_page.text
-    assert "order.js?v=20260828-7" in tablet_page.text
+    assert re.search(r"order\.js\?v=\d{8}-\d+", tablet_page.text)
     assert "注文候補を確認" in tablet_page.text
     assert "話した内容を確認</button>" not in tablet_page.text
     assert 'data-request="water"' not in tablet_page.text
@@ -853,20 +854,20 @@ def test_admin_page_exposes_table_departure_reset_controls(shared_client):
     assert 'id="table-reset-list"' in page.text
     assert "テーブル管理" in page.text
     assert "退店処理して次のお客様へ" in page.text
-    assert "table-admin.js?v=20260827-1" in page.text
+    assert re.search(r"table-admin\.js\?v=\d{8}-\d+", page.text)
 
     menu_page = client.get("/admin/menu")
     assert menu_page.status_code == 200
     assert "カテゴリ設定" in menu_page.text
     assert 'id="table-reset-list"' not in menu_page.text
-    assert "admin.js?v=20260827-4" in menu_page.text
+    assert re.search(r"admin\.js\?v=\d{8}-\d+", menu_page.text)
 
 
 def test_kitchen_websocket_heartbeat_returns_pong(shared_client):
     client, _ = shared_client
     page = client.get("/kitchen")
     assert page.status_code == 200
-    assert "kitchen.js?v=20260827-6" in page.text
+    assert re.search(r"kitchen\.js\?v=\d{8}-\d+", page.text)
     with client.websocket_connect("/api/v1/ws/kitchen") as websocket:
         websocket.send_text("ping")
         assert websocket.receive_json() == {"type": "connection.pong"}
