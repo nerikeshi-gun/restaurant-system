@@ -195,7 +195,7 @@ docs 16章と common-platform-db の `design-review.md` の未決事項のうち
 [tools/sqlite_to_platform_sql.py](../tools/sqlite_to_platform_sql.py) が、現行SQLiteのマスタを投入SQLへ変換する。標準ライブラリだけで動き、SQLiteは読み取り専用で開く。
 
 ```powershell
-.\.venv\Scripts\python.exe tools\sqlite_to_platform_sql.py --db dataestaurant.db --out tmp\migration.sql
+.\.venv\Scripts\python.exe tools\sqlite_to_platform_sql.py --db data\restaurant.db --out tmp\migration.sql
 psql -v ON_ERROR_STOP=1 -d <db> -f tmp\migration.sql
 ```
 
