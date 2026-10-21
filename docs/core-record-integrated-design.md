@@ -190,10 +190,34 @@ docs 16章と common-platform-db の `design-review.md` の未決事項のうち
 
 実行環境と結果は [common-platform-db/test-results.md](../common-platform-db/test-results.md) の「core_record 追加分」を参照。
 
+### マスタ移行（SQLite → 共通基盤DB）
+
+[tools/sqlite_to_platform_sql.py](../tools/sqlite_to_platform_sql.py) が、現行SQLiteのマスタを投入SQLへ変換する。標準ライブラリだけで動き、SQLiteは読み取り専用で開く。
+
+```powershell
+.\.venv\Scripts\python.exe tools\sqlite_to_platform_sql.py --db dataestaurant.db --out tmp\migration.sql
+psql -v ON_ERROR_STOP=1 -d <db> -f tmp\migration.sql
+```
+
+| 移行元 | 移行先 |
+|---|---|
+| `stores` | `tenants`（法人。既定は店舗IDを小文字にした値）＋ 場所レコード（店舗） |
+| `dining_tables` | 場所レコード（席）。`located_in` で店舗に属する。QRトークンも移行する |
+| `menu_items`, `menu_aliases` | 商品レコード。別名は `data.aliases`、アーカイブ済みは `archived` |
+| `menu_categories`（オプション用） | 調整分類レコード。使われていない `modifier_groups` テーブルは移行しない |
+| `modifier_options` | 調整選択肢レコード。`option_of` で分類に属する |
+| `menu_item_modifier_groups` | `permits_modifier` 関係（必須・表示順を属性に持つ） |
+
+- 何度適用しても同じ結果になる（`business_key` で upsert し、変更がなければ更新しない）。
+- 現行の実データ（店舗1・席10・商品36・調整分類4・選択肢9・関係44）をPostgreSQL 18.4で適用し、件数が一致すること、再適用で版数・変更履歴が増えないことを確認した。
+- **税区分は移行元にないため、全商品へ `--default-tax-category`（既定 `standard`）を入れる。** 軽減税率の商品は移行後に直す必要がある。
+- 移行しないもの：注文履歴、来店セッション、販売可否（売り切れ）、席の利用状態、店舗の画面設定（基調色・レイアウト）。
+- 出力SQLには席のQRトークンが含まれるため、`tmp/` に出力し、リポジトリへコミットしない。
+
 ### 実装順序（案）
 
-1. 005〜007 を PostgreSQL で実行し、検証を通す（現在ここ）
-2. 場所・商品・品目の移行スクリプト（SQLite → `business_records`）
+1. 005〜007 を PostgreSQL で実行し、検証を通す（完了）
+2. 場所・商品・調整のマスタ移行スクリプト（SQLite → `business_records`）（完了。品目・仕入先は現行DBにないため対象外）
 3. 確定サービス（正規化 → 検証 → 人の確認 → `core_record`）。AI解析は `core_record_tmp` へ
 4. 注文状態・厨房一覧・会計をビューへ置き換える
 5. 取消・訂正を反対記録へ置き換える

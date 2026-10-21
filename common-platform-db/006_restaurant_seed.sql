@@ -24,6 +24,12 @@ JOIN (VALUES
     ('catalog', 'record', 'product',       '販売商品',
      'お客様へ販売する商品。仕入・在庫の品目(item)とは分ける',
      '{"states":["draft","active","inactive","archived"]}'),
+    ('catalog', 'record', 'modifier_group', '調整分類',
+     'サイズ、盛り、辛さなどの調整の分類。商品へは permits_modifier 関係で割り当てる',
+     '{"states":["draft","active","inactive","archived"]}'),
+    ('catalog', 'record', 'modifier_option', '調整選択肢',
+     '小・中・大、大盛などの選択肢。調整分類へは option_of 関係で属する',
+     '{"states":["draft","active","inactive","archived"]}'),
     ('operation','record','visit_session', '来店セッション',
      '席の利用開始から終了までの来店単位。匿名で、会員IDは後から関連付ける',
      '{"states":["draft","active","archived"]}'),
@@ -71,6 +77,16 @@ JOIN (VALUES
      '{"enum":["standard","reduced","exempt"]}','internal',30),
     ('product','category','表示分類','ドリンク、料理など','string',100,false,'{}','internal',40),
     ('product','aliases','別名・読み','音声認識の別名、略称、読み、よくある誤認識','json',NULL,false,'{}','internal',50),
+
+    ('product','reading','読み','ひらがな・カタカナの読み。音声認識の照合に使う','string',200,false,'{}','internal',60),
+    ('product','size_label','サイズ表示','大・中・小など商品に固有の表示','string',50,false,'{}','internal',70),
+    ('product','set_contents','セット内容','セット商品の構成の説明','text',500,false,'{}','internal',80),
+    ('product','localized_names','多言語名称','言語コードをキーにした表示名。例 {"en":"Rice"}','json',NULL,false,'{}','internal',90),
+
+    ('modifier_group','selection_type','選択方式','single: 一つだけ / multiple: 複数','string',20,true,
+     '{"enum":["single","multiple"]}','internal',10),
+    ('modifier_option','price_delta','追加料金','標準からの価格差。マイナスも可','decimal',NULL,true,'{}','internal',10),
+    ('modifier_option','is_default','標準選択','true で初期選択。必須項目でも自動選択はしない','boolean',NULL,false,'{}','internal',20),
 
     ('visit_session','party_size','人数','来店人数','integer',NULL,false,'{"minimum":1}','internal',10),
 
