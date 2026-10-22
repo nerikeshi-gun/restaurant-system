@@ -617,10 +617,13 @@ function setupInquiryVoice() {
 }
 
 function connect() {
-  const protocol = location.protocol === 'https:' ? 'wss' : 'ws'; const socket = new WebSocket(`${protocol}://${location.host}/api/v1/ws/orders/${sessionId}`);
-  socket.onopen = () => { $('#sync-state').textContent = dt('synced'); loadOrder().catch(() => {}); };
-  socket.onmessage = async event => {
-    const data = JSON.parse(event.data);
+  // 再接続・生存確認・スリープ復帰対応は ws-client.js が担当する
+  createReconnectingSocket({
+    path: `/api/v1/ws/orders/${sessionId}`,
+    onState: state => { if (state !== 'connected') $('#sync-state').textContent = dt('reconnecting'); },
+    onOpen: () => { $('#sync-state').textContent = dt('synced'); loadOrder().catch(() => {}); },
+    onMessage: async (event, data) => {
+    if (!data) return;
     if (data.type.startsWith('shared_order.') || data.type === 'kitchen.status_changed') { order = data.data; renderSharedOrder(); }
     if (data.type === 'shared_order.cancel_approved') { await loadOrder().catch(() => {}); showCancelDecision(true); }
     if (data.type === 'shared_order.cancel_rejected') { await loadOrder().catch(() => {}); showCancelDecision(false); }
@@ -639,8 +642,8 @@ function connect() {
       if (Number(popup.dataset.messageId || 0) <= dismissedReplyId()) popup.classList.add('hidden');
     }
     if (data.type === 'table.session_reset') location.replace(body.dataset.languageUrl);
-  };
-  socket.onclose = () => { $('#sync-state').textContent = dt('reconnecting'); setTimeout(connect, 1500); };
+    },
+  });
 }
 
 function applyLanguageText() {

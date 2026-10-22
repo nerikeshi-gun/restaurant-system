@@ -164,18 +164,22 @@ function showView(name) {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
+const SYNC_STATE_LABEL = { connecting: '接続中…', reconnecting: '再接続中…', offline: 'Wi-Fi未接続（端末の通信を確認）', server_unreachable: '親機PCに届きません（PC・サーバーを確認）' };
 function connect() {
-  const protocol = location.protocol === 'https:' ? 'wss' : 'ws'; const socket = new WebSocket(`${protocol}://${location.host}/api/v1/ws/orders/${sessionId}`);
-  socket.onopen = () => $('#sync-state').textContent = '同期済み';
-  socket.onmessage = event => {
-    const data = JSON.parse(event.data);
+  // 再接続・生存確認・スリープ復帰対応は ws-client.js が担当する
+  createReconnectingSocket({
+    path: `/api/v1/ws/orders/${sessionId}`,
+    onState: state => { if (state !== 'connected') $('#sync-state').textContent = SYNC_STATE_LABEL[state] || '再接続中…'; },
+    onOpen: () => { $('#sync-state').textContent = '同期済み'; loadOrder().catch(() => {}); },
+    onMessage: (event, data) => {
+    if (!data) return;
     if (data.type.startsWith('shared_order.') || data.type === 'kitchen.status_changed') { order = data.data; renderOrder(); }
     if (data.type === 'menu.availability_changed') api('/api/v1/menu').then(data => { menu = data; renderMenu(); });
     if (data.type === 'store.settings_changed') { body.style.setProperty('--accent', data.data.theme_color); }
     if (data.type === 'message.created' && data.data.sender_type === 'kitchen') toast(`厨房から：${data.data.text}`);
     if (data.type === 'table.session_reset') location.replace('/staff');
-  };
-  socket.onclose = () => { $('#sync-state').textContent = '再接続中…'; setTimeout(connect, 1500); };
+    },
+  });
 }
 
 $('#show-menu').onclick = () => showView('menu');
