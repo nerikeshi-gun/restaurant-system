@@ -1361,12 +1361,20 @@ async def kitchen_websocket(websocket: WebSocket):
         manager.disconnect(websocket)
 
 
+@app.get("/api/v1/health")
+def health():
+    # 端末側が「サーバーに届くか」を確認するための軽量な窓口（DBには触れない）
+    return {"status": "ok", "time": datetime.now(timezone.utc).isoformat()}
+
+
 @app.websocket("/api/v1/ws/customer/{session_id}")
 async def customer_websocket(session_id: int, websocket: WebSocket):
     await manager.connect_customer(session_id, websocket)
     try:
         while True:
-            await websocket.receive_text()
+            message = await websocket.receive_text()
+            if message == "ping":
+                await websocket.send_json({"type": "connection.pong"})
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
@@ -1376,6 +1384,8 @@ async def shared_order_websocket(session_id: int, websocket: WebSocket):
     await manager.connect_customer(session_id, websocket)
     try:
         while True:
-            await websocket.receive_text()
+            message = await websocket.receive_text()
+            if message == "ping":
+                await websocket.send_json({"type": "connection.pong"})
     except WebSocketDisconnect:
         manager.disconnect(websocket)
